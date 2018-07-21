@@ -1,3 +1,12 @@
+certifi==2018.4.16
+chardet==3.0.4
+idna==2.7
+PyJWT==1.6.4
+PySocks==1.6.8
+pytz==2018.5
+requests==2.19.1
+twilio==6.15.1
+urllib3==1.23
 alembic==1.0.0
 click==6.7
 Flask==1.0.2
