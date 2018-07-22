@@ -3,7 +3,7 @@ from flask import render_template
 from twilio.rest import Client
 from flask import request, redirect, url_for, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
-from re import match
+from re import match, findall
 import requests
 import math
 
@@ -283,6 +283,27 @@ def notifyOriginal(original):
         "to": original
     })
 
+def check(word):
+    return "," in word or "." in word or " and " in word
+
+def split(word):
+    if "," in word:
+        words = word.split(",")
+        for i, w in enumerate(words):
+            print(2, "[%s]" % w, "<%s>" % words[i])
+            if " and " in w:
+                before = words[:i]
+                current = words[i].split(" and ")[1]
+                print(3, before, current)
+                words = before + [current]
+        words = [x.strip() for x in words]
+        print(4, words)
+        return words
+    elif "." in word:
+        return word.split(".")
+    elif " and " in word:
+        return word.split(" and ")
+
 @app.route("/sms", methods=['GET', 'POST'])
 @app.route("/sms/<command>", methods=['GET', 'POST'])
 def reply(command=None):
@@ -307,12 +328,13 @@ def reply(command=None):
     sms_message = client.messages(sms_sid).fetch()
     word = sms_message.body.strip().lower()
     agent = sms_message.from_
+    pattern = r"(?:\sand\s)?([^\., ]+)"
     if word == 'order pizza' and participants.get(agent, 0) == 0:
         message = 'What choices?'
         participants[agent] = 1
-    elif len(word.split(",")) == 3 and participants.get(agent, 0) == 1:
+    elif check(word) and participants.get(agent, 0) == 1:
         message = 'For how many?'
-        choices = word
+        choices = findall(pattern, word)
         participants[agent] = 2
     elif len(word) > 0 and participants.get(agent, 0) == 2:
         message = "Order ID: " + orderID
@@ -320,9 +342,9 @@ def reply(command=None):
         participants[agent] = 3
         original = agent
     elif word == "3589" and participants.get(agent, 3) == 3:
-        message = 'List preferences in order: %s' % choices
+        message = 'List preferences in order: %s' % ", ".join(choices)
         participants[agent] = 4
-    elif len(word.split(",")) == 3 and participants.get(agent, 3) == 4:
+    elif len(split(word)) == len(choices) and participants.get(agent, 3) == 4:
         decisions.append(word)
         message = 'Thank you!'
         participants[agent] = 0
