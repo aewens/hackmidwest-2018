@@ -43,9 +43,9 @@
         "user": "user5",
         "info": {
             "pizza": [
+                "hawaiian",
                 "cheese",
-                "pepperoni",
-                "hawaiian"
+                "pepperoni"
             ]
         }
     }

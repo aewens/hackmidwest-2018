@@ -5,6 +5,7 @@ from flask import request, redirect, url_for, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from re import match
 import requests
+import math
 
 # Your Account Sid and Auth Token from twilio.com/console
 account_sid = 'ACe47bb3d689fcd1d09972b615e8efa9ba'
@@ -72,7 +73,6 @@ def edit(user_id):
 
         for info in all_info:
             if info.user[0].id == int(user_id):
-                print(info)
                 db.session.delete(info)
                 
         information = []
@@ -108,6 +108,143 @@ def edit(user_id):
         }
         return render_template("edit.html", **kwargs)
 
+def base(apply, mode, target, processing):
+    rank = dict()
+    for _, entry in processing.items():
+        print("****")
+        for attr, props in entry.items():
+            size = len(props)
+            if mode == "lin":
+                for i, prop in enumerate(props):
+                    rank[attr] = rank.get(attr, dict())
+                    rank[attr][prop] = rank[attr].get(prop, 0)
+                    rank[attr][prop] += apply(size, i)
+                    print("*", prop, i, apply(size, i))
+            elif mode == "exp":
+                for i, prop in enumerate(props):
+                    rank[attr] = rank.get(attr, dict())
+                    rank[attr][prop] = rank[attr].get(prop, 0)
+                    rank[attr][prop] += apply(size, i) * size**2
+                    print("*", prop, i, apply(size, i) * size**2)
+            elif mode == "log":
+                for i, prop in enumerate(props):
+                    rank[attr] = rank.get(attr, dict())
+                    rank[attr][prop] = rank[attr].get(prop, 0)
+                    rank[attr][prop] += math.log(apply(size, i))
+                    print("*", prop, i, math.log(apply(size, i)))
+
+    return rank
+
+def maximize(mode, target, processing):
+    apply = lambda size, index: index
+    return base(apply, mode, target, processing)
+
+def minimize(mode, target, processing):
+    apply = lambda size, index: -index
+    return base(apply, mode, target, processing)
+
+def standard(mode, target, processing):
+    apply = lambda size, index: math.floor(size/2) - index
+    return base(apply, mode, target, processing)
+
+@app.route("/think", methods=["GET", "POST"])
+def think():
+    if request.method == "POST":
+        skip = request.json.get("skip", None)
+        processing = dict()
+        target = None
+        if skip is not None:
+            data = request.json.get("data", [])
+            target = request.json.get("target", "data")
+            for i, d in enumerate(data):
+                payload = dict()
+                payload[target] = d
+                processing[i] = payload
+        else:
+            user_ids = request.json.get("users", "").split(",")
+            user_ids = [int(user_id) for user_id in user_ids]
+            info_keys = request.json.get("keys", "").split(",")
+            target = request.json.get("target", None)
+            users = models.User.query.all()
+            information = models.Info.query.all()
+            print(1, user_ids)
+            print(2, info_keys)
+            print(3, users)
+            print(4, information)
+
+            used_users = [u for u in users if u.id in user_ids]
+            print(5, used_users)
+            
+            for user in used_users:
+                used_info = [i for i in user.info if i.key in info_keys]
+                if target is None and len(used_info) == 1:
+                    target = used_info[0].key
+
+                for uinfo in used_info:
+                    uid = uinfo.user[0].id
+                    processing[uid] = processing.get(uid, dict())
+                    props = [prop.strip() for prop in uinfo.value.split(",")]
+                    processing[uid][uinfo.key] = props
+
+        goals = {
+            "+": maximize, 
+            "-": minimize,
+            "0": standard
+        }
+        goal = goals.get(request.json.get("goal"), "-")
+        modes = ["lin", "exp", "log"]
+        mode = request.json.get("mode", "")
+        mode = mode if mode in modes else "lin"
+        print(6, goal, mode, target, processing)
+
+        decision = goal(mode, target, processing)
+        print(7, decision)
+        # db.session.delete(user)
+        # db.session.commit()
+        return jsonify({
+            "success": True
+        })
+    else:
+        users = models.User.query.all()
+        information = models.Info.query.all()
+
+        user_info = dict()
+        info_export = dict()
+        for info in information:
+            iuser = info.user[0]
+            uid = iuser.id
+            type_ = "Text"
+            if match(r"^0\.", info.value):
+                type_ = "Percent"
+            elif match(r"^\d+$", info.value):
+                type_ = "Number"
+            info_dict = {
+                "id": info.id,
+                "key": info.key,
+                "value": info.value,
+                "type": type_
+            }
+            user_info[uid] = user_info.get(uid, [])
+            user_info[uid].append(info_dict)
+            info_dict["user"] = uid
+            info_export[info.key] = info_export.get(info.key, [])
+            info_export[info.key].append(uid)
+            
+        users_export = list()
+        for user in users:
+            users_export.append({
+                "id": user.id,
+                "name": user.name,
+                "info": user_info[user.id]
+            })
+
+        kwargs = {
+            "active": "think",
+            "users": users_export,
+            "information": info_export
+        }
+        return render_template("think.html", **kwargs)
+
 @app.route("/tweak", methods=["GET", "POST"])
 def tweak():
     if request.method == "POST":
@@ -120,18 +257,17 @@ def tweak():
 
 @app.route("/delete", methods=["POST"])
 def delete():
-    if request.method == "POST":
-        user_id = request.json.get("user")
-        user = models.User.query.filter_by(id=user_id).one_or_none()
-        
-        if user is None:
-            return None
+    user_id = request.json.get("user")
+    user = models.User.query.filter_by(id=user_id).one_or_none()
+    
+    if user is None:
+        return None
 
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify({
-            "success": True
-        })
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({
+        "success": True
+    })
 
 orderID = "3589"
 decisions = []
