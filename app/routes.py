@@ -99,7 +99,7 @@ def reply(command=None):
         participants[agent] = 1
     elif len(word.split(",")) == 3 and participants.get(agent, 0) == 1:
         message = 'For how many?'
-        choices = word
+        choices = [x.strip() for x in word.split(',')]
         participants[agent] = 2
     elif len(word) > 0 and participants.get(agent, 0) == 2:
         message = "Order ID: " + orderID
@@ -107,7 +107,7 @@ def reply(command=None):
         participants[agent] = 3
         original = agent
     elif word == "3589" and participants.get(agent, 3) == 3:
-        message = 'List preferences in order: %s' % choices
+        message = 'List preferences in order: %s' % ", ".join(choices)
         participants[agent] = 4
     elif len(word.split(",")) == 3 and participants.get(agent, 3) == 4:
         decisions.append(word)
