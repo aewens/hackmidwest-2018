@@ -140,7 +140,16 @@ choices = ""
 participants = {}
 original = ""
 
-def notifyOriginal(original):
+def notifyOriginal(original, decisions):
+    req = requests.post("http://127.0.0.1:10101/think", {
+        "data": decisions,
+        "goal": "-",
+        "mode": "lin",
+        "skip": "1"
+    })
+    decision = r.json()
+    print(decision)
+
     requests.post("https://removeo.serveo.net/sms/override", {
         "body": "debug",
         "from_": "+18162088161",
@@ -214,7 +223,7 @@ def reply(command=None):
         participants[agent] = 0
         counter = int(counter) - 1
         if counter == 0:
-            notifyOriginal(original)
+            notifyOriginal(original, decisions)
     else:
         message = 'Invalid'
     resp = MessagingResponse()
