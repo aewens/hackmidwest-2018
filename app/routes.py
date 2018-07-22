@@ -4,6 +4,7 @@ from twilio.rest import Client
 from flask import request, redirect, url_for, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from re import match
+import requests
 
 # Your Account Sid and Auth Token from twilio.com/console
 account_sid = 'ACe47bb3d689fcd1d09972b615e8efa9ba'
@@ -132,16 +133,70 @@ def delete():
             "success": True
         })
 
-@app.route("/sms", methods=['GET', 'POST'])
-def reply():
-    sms_sid = request.values.get("SmsSid")
-    word = client.messages(sms_sid).fetch().body.strip().lower()
-    if word == 'ready':
-        message = 'Go'
-    else:
-        message = "You did not say 'ready'"
+orderID = "3589"
+decisions = []
+counter = 0
+choices = ""
+participants = {}
+original = ""
 
+def notifyOriginal(original):
+    requests.post("https://removeo.serveo.net/sms/override", {
+        "body": "debug",
+        "from_": "+18162088161",
+        "to": original
+    })
+
+@app.route("/sms", methods=['GET', 'POST'])
+@app.route("/sms/<command>", methods=['GET', 'POST'])
+def reply(command=None):
+    global orderId
+    global decisions
+    global counter
+    global choices
+    global participants
+    global original
+
+    if command == "override":
+        body = request.values.get("body")
+        from_ = request.values.get("from_")
+        to = request.values.get("to")
+        message = client.messages.create(body=body, from_=from_,to=to)
+        resp = MessagingResponse()
+        resp.message(message)
+
+        return str(resp)
+
+    sms_sid = request.values.get("SmsSid")
+    sms_message = client.messages(sms_sid).fetch()
+    word = sms_message.body.strip().lower()
+    agent = sms_message.from_
+    if word == 'order pizza' and participants.get(agent, 0) == 0:
+        message = 'What choices?'
+        participants[agent] = 1
+    elif len(word.split(",")) == 3 and participants.get(agent, 0) == 1:
+        message = 'For how many?'
+        choices = word
+        participants[agent] = 2
+    elif len(word) > 0 and participants.get(agent, 0) == 2:
+        message = "Order ID: " + orderID
+        counter = word
+        participants[agent] = 3
+        original = agent
+    elif word == "3589" and participants.get(agent, 3) == 3:
+        message = 'List preferences in order: %s' % choices
+        participants[agent] = 4
+    elif len(word.split(",")) == 3 and participants.get(agent, 3) == 4:
+        decisions.append(word)
+        message = 'Thank you!'
+        participants[agent] = 0
+        counter = int(counter) - 1
+        if counter == 0:
+            notifyOriginal(original)
+    else:
+        message = 'Invalid'
     resp = MessagingResponse()
     resp.message(message)
+    
 
     return str(resp)
