@@ -18,7 +18,12 @@ class Info(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
-    info = db.relationship("Info", secondary=user_info_assignment)
+    info = db.relationship(
+        "Info", 
+        backref="user", 
+        lazy="dynamic", 
+        secondary=user_info_assignment
+    )
 
     def __str__(self):
         return "<User %s>" % self.name
