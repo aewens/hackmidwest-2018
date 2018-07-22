@@ -9,3 +9,12 @@
     margin-left: 0;
     padding-left: 0;
 }
+
+.uk-icon > svg:nth-child(2) {
+    display: none;
+}
+
+[uk-icon=arrow-left]:hover,
+[uk-icon=arrow-right]:hover {
+    cursor: pointer;
+}

@@ -27,6 +27,9 @@
                     <li {{ "class=uk-active" if active ==  "new" }}>
                         <a href="{{ url_for('.new') }}">New</a>
                     </li>
+                    <li {{ "class=uk-active" if active=="think" }}>
+                        <a href="{{ url_for('.think') }}">Think</a>
+                    </li>
                     <li {{ "class=uk-active" if active ==  "tweak" }}>
                         <a href="{{ url_for('.tweak') }}">Tweak</a>
                     </li>
@@ -54,16 +57,16 @@
 
     <!-- Load scripts here -->
     <script src="{{ 
-        url_for('.static', filename='scripts/uikit.min.js') 
-    }}"></script>
-    <script src="{{ 
-        url_for('.static', filename='scripts/uikit-icons.min.js') 
-    }}"></script>
-    <script src="{{ 
         url_for('.static', filename='scripts/vue.min.js') 
     }}"></script>
     <script src="{{ 
         url_for('.static', filename='scripts/axios.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/uikit.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/uikit-icons.min.js') 
     }}"></script>
     <script src="{{ url_for('.static', filename='scripts/app.js') }}"></script>
     {% block postprocess %}{% endblock %}
