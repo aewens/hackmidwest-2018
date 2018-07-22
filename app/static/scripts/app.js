@@ -8,6 +8,8 @@ var app = new Vue({
         keysAll: {},
         keysInclude: {},
         targetKey: null,
+        goal: "0",
+        mode: "lin",
         information: [{
             key: "",
             value: 0,
