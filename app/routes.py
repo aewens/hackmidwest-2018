@@ -133,7 +133,17 @@ def base(apply, mode, target, processing):
                     rank[attr][prop] += math.log(apply(size, i))
                     print("*", prop, i, math.log(apply(size, i)))
 
-    return rank
+    decision = None
+    highest = -1
+    for prop, rnk in rank[target].items():
+        if highest < 0:
+            decision = prop
+            highest = rnk
+        elif rnk > highest:
+            decision = prop
+            highest = rnk
+
+    return decision
 
 def maximize(mode, target, processing):
     apply = lambda size, index: index
@@ -150,21 +160,36 @@ def standard(mode, target, processing):
 @app.route("/think", methods=["GET", "POST"])
 def think():
     if request.method == "POST":
-        skip = request.json.get("skip", None)
+        skip = request.values.get("skip", None)
         processing = dict()
         target = None
+        goals = {
+            "+": maximize, 
+            "-": minimize,
+            "0": standard
+        }
+        modes = ["lin", "exp", "log"]
         if skip is not None:
-            data = request.json.get("data", [])
-            target = request.json.get("target", "data")
-            for i, d in enumerate(data):
+            data = request.values.get("data", "").split("|")
+            target = request.values.get("target", "data")
+            goal = goals.get(request.values.get("goal"), "-")
+            mode = request.values.get("mode", "")
+            mode = mode if mode in modes else "lin"
+            print(11, data)
+            print(12, target)
+            print(13, goal, mode)
+            for i, dt in enumerate(data):
                 payload = dict()
-                payload[target] = d
+                payload[target] = [d.strip() for d in dt.split(",")]
                 processing[i] = payload
         else:
             user_ids = request.json.get("users", "").split(",")
             user_ids = [int(user_id) for user_id in user_ids]
             info_keys = request.json.get("keys", "").split(",")
             target = request.json.get("target", None)
+            goal = goals.get(request.json.get("goal"), "-")
+            mode = request.json.get("mode", "")
+            mode = mode if mode in modes else "lin"
             users = models.User.query.all()
             information = models.Info.query.all()
             print(1, user_ids)
@@ -186,15 +211,6 @@ def think():
                     props = [prop.strip() for prop in uinfo.value.split(",")]
                     processing[uid][uinfo.key] = props
 
-        goals = {
-            "+": maximize, 
-            "-": minimize,
-            "0": standard
-        }
-        goal = goals.get(request.json.get("goal"), "-")
-        modes = ["lin", "exp", "log"]
-        mode = request.json.get("mode", "")
-        mode = mode if mode in modes else "lin"
         print(6, goal, mode, target, processing)
 
         decision = goal(mode, target, processing)
@@ -202,7 +218,8 @@ def think():
         # db.session.delete(user)
         # db.session.commit()
         return jsonify({
-            "success": True
+            "success": True,
+            "decision": decision
         })
     else:
         users = models.User.query.all()
@@ -277,17 +294,17 @@ participants = {}
 original = ""
 
 def notifyOriginal(original, decisions):
+    print("~", decisions)
     req = requests.post("http://127.0.0.1:10101/think", {
-        "data": decisions,
+        "data": "|".join([",".join(d) for d in decisions]),
         "goal": "-",
         "mode": "lin",
         "skip": "1"
     })
-    decision = r.json()
-    print(decision)
+    decision = req.json().get("decision", "")
 
     requests.post("https://removeo.serveo.net/sms/override", {
-        "body": "debug",
+        "body": "Decision: %s" % decision,
         "from_": "+18162088161",
         "to": original
     })
@@ -338,23 +355,23 @@ def reply(command=None):
     word = sms_message.body.strip().lower()
     agent = sms_message.from_
     pattern = r"(?:\sand\s)?([^\., ]+)"
-    if word == 'order pizza' and participants.get(agent, 0) == 0:
+    if participants.get(agent, 0) == 0 and word == 'order pizza':
         message = 'What choices?'
         participants[agent] = 1
-    elif check(word) and participants.get(agent, 0) == 1:
+    elif participants.get(agent, 0) == 1 and check(word):
         message = 'For how many?'
         choices = findall(pattern, word)
         participants[agent] = 2
-    elif len(word) > 0 and participants.get(agent, 0) == 2:
+    elif participants.get(agent, 0) == 2 and len(word) > 0:
         message = "Order ID: " + orderID
         counter = word
         participants[agent] = 3
         original = agent
-    elif word == "3589" and participants.get(agent, 3) == 3:
+    elif participants.get(agent, 3) == 3 and word == "3589":
         message = 'List preferences in order: %s' % ", ".join(choices)
         participants[agent] = 4
-    elif len(split(word)) == len(choices) and participants.get(agent, 3) == 4:
-        decisions.append(word)
+    elif participants.get(agent, 3) == 4 and len(split(word)) == len(choices):
+        decisions.append(split(word))
         message = 'Thank you!'
         participants[agent] = 0
         counter = int(counter) - 1
