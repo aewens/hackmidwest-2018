@@ -48,14 +48,44 @@ def edit():
     else:
         return render_template("edit.html", active="edit")
 
+orderID = "3589"
+decisions = []
+counter = 0
+choices = ""
+participants = {}
+
 @app.route("/sms", methods=['GET', 'POST'])
 def reply():
+    global orderId
+    global decisions
+    global counter
+    global choices
+    global participants
+
     sms_sid = request.values.get("SmsSid")
-    word = client.messages(sms_sid).fetch().body.strip().lower()
-    if word == 'ready':
-        message = 'Go'
+    sms_message = client.messages(sms_sid).fetch()
+    word = sms_message.body.strip().lower()
+    agent = sms_message.from
+    if word == 'order pizza' and participants.get(agent, 0) == 0:
+        message = 'What choices?'
+        participants[agent] = 1
+    elif len(word.split(",")) == 3 and participants.get(agent, 0) == 1:
+        message = 'For how many?'
+        choices = word
+        participants[agent] = 2
+    elif len(word) > 0 and participants.get(agent, 0) == 2:
+        message = "Order ID: " + orderID
+        counter = word
+        participants[agent] = participants.get(agent, 3)
+    elif word == "3589" and participants.get(agent, 3) == 3:
+        message = 'List preferences in order: %s' % choices
+        participants[agent] = 4
+    elif len(word.split(",")) == 3 and participants.get(agent, 3) == 4:
+        decisions.append(word)
+        message = 'Thank you!'
+        participants[agent] = 5
     else:
-        message = "You did not say 'ready'"
+        message = 'Invalid'
 
     resp = MessagingResponse()
     resp.message(message)
