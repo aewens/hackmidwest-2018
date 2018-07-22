@@ -1,13 +1,11 @@
-* {
+/* * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     list-style-type: none;
-}
+} */
 
-html, body {
-    /* background: #000;
-    color: #000; */
-    width: 100%;
-    
+.grid-fix {
+    margin-left: 0;
+    padding-left: 0;
 }

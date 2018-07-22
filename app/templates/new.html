@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form uk-grid method="POST" action="{{ url_for('.new') }}">
+    <legend class="uk-legend uk-width-1-1">New User</legend>
+    <div class="uk-width-1-1">
+        <label class="uk-form-label">Name</label>
+        <input class="uk-input" type="text" placeholder="Name" name="name">
+    </div>
+    <h4 class="uk-heading uk-width-1-1">User Information</h4>
+    <div class="uk-width-1-1 grid-fix" uk-grid v-for="(info, i) in information">
+        <div class="uk-width-1-4@s">
+            <input class="uk-input" type="text" placeholder="Key" :name="'key:' + i" v-model="information[i].key">
+        </div>
+        <div class="uk-width-1-4@s">
+            <select class="uk-select" v-model="information[i].type">
+                <option>Text</option>
+                <option>Number</option>
+                <option>Percent</option>
+            </select>
+        </div>
+        <div class="uk-width-1-2@s" v-if="information[i].type === 'Text'">
+            <input class="uk-input" type="text" placeholder="Value"  :name="'value:' + i" v-model="information[i].value">
+        </div>
+        <div class="uk-width-1-2@s" v-if="information[i].type === 'Number'">
+            <input class="uk-input" type="number" :name="'value:' + i" v-model="information[i].value">
+        </div>
+        <div class="uk-width-1-4@s" v-if="information[i].type === 'Percent'">
+            <input class="uk-input" type="number" :name="'value:' + i" readonly v-bind:value="percent(i)">
+        </div>
+        <div class="uk-width-1-4@s" v-if="information[i].type === 'Percent'">
+            <input class="uk-range" type="range" min="0" max="100" step="5" v-model="information[i].value">
+        </div>
+    </div>
+    <div class="uk-width-1-1">
+        <input type="button" class="uk-button uk-width-1-1" value="Add More Information" @click="addInformation">
+    </div>
+    <div class="uk-width-1-1">
+        <button type="submit" class="uk-button uk-button-primary uk-width-1-1">
+            Add New User
+        </button>
+    </div>
+</form>
+{% endblock %}

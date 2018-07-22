@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Ewe Think</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.9/css/uikit.min.css" />
+    <link rel="stylesheet" href="{{
+        url_for('.static', filename='stylesheets/style.css')
+    }}">
+</head>
+<body>
+    
+    <div class="uk-container">
+        <h1 class="uk-heading-line uk-text-center">
+            <span>Ewe Think</span>
+        </h1>
+        <nav class="uk-navbar-container" uk-navbar>
+            <div class="uk-navbar-center">
+                <ul class="uk-navbar-nav">
+                    <li {{ "class=uk-active" if active ==  "home" }}>
+                        <a href="{{ url_for('.home') }}">Home</a>
+                    </li>
+                    <li {{ "class=uk-active" if active ==  "new" }}>
+                        <a href="{{ url_for('.new') }}">New</a>
+                    </li>
+                    <li {{ "class=uk-active" if active ==  "edit" }}>
+                        <a href="{{ url_for('.edit') }}">Edit</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <hr class="uk-divider-icon">
+        <div id="app">
+            {% block content %}{% endblock %}
+        </div>
+        <hr class="uk-divider-icon">
+        <footer>
+            <p class="uk-text-center">
+                Copyright &copy; 2018 Austin & Garrett Ewens. All rights reserved.
+            </p>
+        </footer>
+    </div>
+
+    <!-- Load scripts here -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.9/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.9/js/uikit-icons.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="{{
+        url_for('.static', filename='scripts/app.js')
+    }}"></script>
+</body>
+</html>
