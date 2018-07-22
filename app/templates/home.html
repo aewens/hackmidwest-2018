@@ -3,6 +3,7 @@
 {% block content %}
 <div class="uk-grid-medium" uk-grid>
     <div class="uk-width-1-3@s">
+        <h4 class="uk-heading">Select a user</h4>
         <select class="uk-select" v-model="user">
             {% for user in users %}
             <option value="{{ user.id }}">{{ user.name }}</option>
