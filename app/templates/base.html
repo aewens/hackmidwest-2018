@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Ewe Think</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.9/css/uikit.min.css" />
+    <link rel="stylesheet" href="{{
+        url_for('.static', filename='stylesheets/uikit.min.css')
+    }}">
     <link rel="stylesheet" href="{{
         url_for('.static', filename='stylesheets/style.css')
     }}">
@@ -25,9 +27,16 @@
                     <li {{ "class=uk-active" if active ==  "new" }}>
                         <a href="{{ url_for('.new') }}">New</a>
                     </li>
-                    <li {{ "class=uk-active" if active ==  "edit" }}>
-                        <a href="{{ url_for('.edit') }}">Edit</a>
+                    <li {{ "class=uk-active" if active ==  "tweak" }}>
+                        <a href="{{ url_for('.tweak') }}">Tweak</a>
                     </li>
+                    {% if active == "edit" %}
+                    <li {{ "class=uk-active" if active=="edit" }}>
+                        <a href="{{ url_for('.edit', user_id=user_id) }}">
+                            Edit
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </nav>
@@ -44,11 +53,19 @@
     </div>
 
     <!-- Load scripts here -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.9/js/uikit.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.9/js/uikit-icons.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="{{
-        url_for('.static', filename='scripts/app.js')
+    <script src="{{ 
+        url_for('.static', filename='scripts/uikit.min.js') 
     }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/uikit-icons.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/vue.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/axios.min.js') 
+    }}"></script>
+    <script src="{{ url_for('.static', filename='scripts/app.js') }}"></script>
+    {% block postprocess %}{% endblock %}
 </body>
 </html>
