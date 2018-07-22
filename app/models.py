@@ -22,6 +22,7 @@ class User(db.Model):
         "Info", 
         backref="user", 
         lazy="dynamic", 
+        cascade="all,delete", 
         secondary=user_info_assignment
     )
 

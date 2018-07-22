@@ -8,6 +8,10 @@
             <option value="{{ user.id }}">{{ user.name }}</option>
             {% endfor %}
         </select>
+        <a class="uk-button uk-button-primary uk-margin-top uk-width-1-1" :href="'/edit/' + user">Edit User</a>
+        <button class="uk-button uk-button-danger uk-margin-top uk-width-1-1" @click="deleteUser">
+            Delete User
+        </button>
     </div>
     <div class="uk-width-2-3@s">
         <table class="uk-table uk-table-hover uk-table-divider">
@@ -19,7 +23,9 @@
             </thead>
             <tbody>
                 {% for info in information %}
-                <tr v-if="user == '{{ info.user[0].id }}'">
+                <tr v-if="user == '{{ 
+                    info.user[0].id if info.user|length > 0 else -2
+                }}'">
                     <td>{{ info.key }}</td>
                     <td>{{ info.value }}</td>
                 </tr>
@@ -29,3 +35,5 @@
     </div>
 </div>
 {% endblock %}
+
+{% block postprocess %}{% endblock %}
