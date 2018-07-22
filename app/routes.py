@@ -377,6 +377,11 @@ def reply(command=None):
         counter = int(counter) - 1
         if counter == 0:
             notifyOriginal(original, decisions)
+            decisions = []
+            counter = 0
+            choices = ""
+            participants = {}
+            original = ""
     else:
         message = 'Invalid'
     resp = MessagingResponse()
