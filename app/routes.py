@@ -12,7 +12,14 @@ client = Client(account_sid, auth_token)
 @app.route("/")
 @app.route("/home")
 def home():
-    return render_template("home.html", active="home")
+    users = models.User.query.all()
+    information = models.Info.query.all()
+    kwargs = {
+        "active": "home",
+        "users": users,
+        "information": information
+    }
+    return render_template("home.html", **kwargs)
 
 @app.route("/new", methods=["GET", "POST"])
 def new():
