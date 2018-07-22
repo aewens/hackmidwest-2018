@@ -2,7 +2,7 @@ var app = new Vue({
     delimiters: ["#{", "}"],
     el: "#app",
     data: {
-        test: [],
+        user: "1",
         information: [{
             key: "",
             value: 0,
