@@ -10,6 +10,7 @@ var app = new Vue({
         targetKey: null,
         goal: "0",
         mode: "lin",
+        notification: "",
         information: [{
             key: "",
             value: 0,
@@ -127,15 +128,18 @@ var app = new Vue({
                     return user.id;
                 }).join(","),
                 keys: Object.keys(this.validKeysInclude).join(","),
-                goal: "-", // +, -, 0
-                mode: "exp", // exp, lin, log
+                goal: this.goal, // +, -, 0
+                mode: this.mode, // exp, lin, log
                 target: this.targetKey
             }).then(function (res) {
-                console.log(res.data.success);
-
-                // if (res.data.success) {
-                //     window.location.reload();
-                // }
+                if (res.data.success) {
+                    UIkit.notification({
+                        message: "Decided on: " + res.data.decision,
+                        status: "primary",
+                        pos: "top-right",
+                        timeout: 5000
+                    });
+                }
             });
         }
     }

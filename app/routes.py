@@ -4,6 +4,7 @@ from twilio.rest import Client
 from flask import request, redirect, url_for, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
 from re import match, findall
+from random import randint
 import requests
 import math
 
@@ -112,44 +113,64 @@ def base(apply, mode, target, processing):
     rank = dict()
     for _, entry in processing.items():
         print("****")
-        for attr, props in entry.items():
-            size = len(props)
-            if mode == "lin":
-                for i, prop in enumerate(props):
-                    rank[attr] = rank.get(attr, dict())
-                    rank[attr][prop] = rank[attr].get(prop, 0)
-                    rank[attr][prop] += apply(size, i)
-                    print("*", prop, i, apply(size, i))
-            elif mode == "exp":
-                for i, prop in enumerate(props):
-                    rank[attr] = rank.get(attr, dict())
-                    rank[attr][prop] = rank[attr].get(prop, 0)
-                    rank[attr][prop] += apply(size, i) * size**2
-                    print("*", prop, i, apply(size, i) * size**2)
-            elif mode == "log":
-                for i, prop in enumerate(props):
-                    rank[attr] = rank.get(attr, dict())
-                    rank[attr][prop] = rank[attr].get(prop, 0)
-                    rank[attr][prop] += math.log(apply(size, i))
-                    print("*", prop, i, math.log(apply(size, i)))
+        modifier = 0
+        for attr, modify in entry.items():
+            if attr == target:
+                continue
 
+            modifier += float(modify[0])
+
+        props = entry[target]
+        size = len(props)
+        if mode == "lin":
+            for i, prop in enumerate(props):
+                imod = modifier * (1 - i / size)
+                rank[target] = rank.get(target, dict())
+                rank[target][prop] = rank[target].get(prop, 0)
+                rank[target][prop] += apply(size, i) + imod
+                print("&", prop, i, apply(size, i), apply(size, i) + imod)
+        elif mode == "exp":
+            for i, prop in enumerate(props):
+                imod = modifier * (1 - i / size)
+                rank[target] = rank.get(target, dict())
+                rank[target][prop] = rank[target].get(prop, 0)
+                rank[target][prop] += apply(size, i) * size**2 + imod
+                print("*", prop, i, apply(size, i) * size**2 + imod)
+        elif mode == "log":
+            for i, prop in enumerate(props):
+                imod = modifier * (1 - i / size)
+                rank[target] = rank.get(target, dict())
+                rank[target][prop] = rank[target].get(prop, 0)
+                rank[target][prop] += math.log(apply(size, i)) + imod
+                print("*", prop, i, math.log(apply(size, i)) + imod)
+                
+    print("%", rank)
     decision = None
-    highest = -1
+    highest = None
+    tied = True
+    options = list()
     for prop, rnk in rank[target].items():
-        if highest < 0:
+        options.append(prop)
+        if highest is None:
             decision = prop
             highest = rnk
-        elif rnk > highest:
+        elif rnk > highest or rnk < highest:
+            tied = False
+
+        if rnk > highest:
             decision = prop
             highest = rnk
+
+    if tied:
+        decision = options[randint(0, len(options) - 1)]
 
     return decision
 
-def maximize(mode, target, processing):
-    apply = lambda size, index: index
+def positive(mode, target, processing):
+    apply = lambda size, index: size - index
     return base(apply, mode, target, processing)
 
-def minimize(mode, target, processing):
+def negative(mode, target, processing):
     apply = lambda size, index: -index
     return base(apply, mode, target, processing)
 
@@ -164,8 +185,8 @@ def think():
         processing = dict()
         target = None
         goals = {
-            "+": maximize, 
-            "-": minimize,
+            "+": positive, 
+            "-": negative,
             "0": standard
         }
         modes = ["lin", "exp", "log"]
@@ -215,8 +236,7 @@ def think():
 
         decision = goal(mode, target, processing)
         print(7, decision)
-        # db.session.delete(user)
-        # db.session.commit()
+        
         return jsonify({
             "success": True,
             "decision": decision
@@ -286,7 +306,7 @@ def delete():
         "success": True
     })
 
-orderID = "3589"
+orderID = ""
 decisions = []
 counter = 0
 choices = ""
@@ -303,7 +323,7 @@ def notifyOriginal(original, decisions):
     })
     decision = req.json().get("decision", "")
 
-    requests.post("https://removeo.serveo.net/sms/override", {
+    requests.post("https://dedecus.serveo.net/sms/override", {
         "body": "Decision: %s" % decision,
         "from_": "+18162088161",
         "to": original
@@ -363,11 +383,12 @@ def reply(command=None):
         choices = findall(pattern, word)
         participants[agent] = 2
     elif participants.get(agent, 0) == 2 and len(word) > 0:
-        message = "Order ID: " + orderID
+        orderId = str(randint(1000,9999))
+        message = "Order ID: " + orderId
         counter = word
         participants[agent] = 3
         original = agent
-    elif participants.get(agent, 3) == 3 and word == "3589":
+    elif participants.get(agent, 3) == 3 and word == orderId:
         message = 'List preferences in order: %s' % ", ".join(choices)
         participants[agent] = 4
     elif participants.get(agent, 3) == 4 and len(split(word)) == len(choices):
@@ -377,6 +398,12 @@ def reply(command=None):
         counter = int(counter) - 1
         if counter == 0:
             notifyOriginal(original, decisions)
+            orderID = ""
+            decisions = []
+            counter = 0
+            choices = ""
+            participants = {}
+            original = ""
     else:
         message = 'Invalid'
     resp = MessagingResponse()
