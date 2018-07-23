@@ -2,6 +2,7 @@
 app.db
 .vscode/
 migrations/
+notes/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

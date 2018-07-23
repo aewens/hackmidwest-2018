@@ -30,9 +30,9 @@
                     <li {{ "class=uk-active" if active=="think" }}>
                         <a href="{{ url_for('.think') }}">Think</a>
                     </li>
-                    <li {{ "class=uk-active" if active ==  "tweak" }}>
+                    {#<li {{ "class=uk-active" if active ==  "tweak" }}>
                         <a href="{{ url_for('.tweak') }}">Tweak</a>
-                    </li>
+                    </li>#}
                     {% if active == "edit" %}
                     <li {{ "class=uk-active" if active=="edit" }}>
                         <a href="{{ url_for('.edit', user_id=user_id) }}">
