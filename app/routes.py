@@ -398,7 +398,7 @@ def reply(command=None):
         counter = int(counter) - 1
         if counter == 0:
             notifyOriginal(original, decisions)
-            orderID = ""
+            orderID = ""]
             decisions = []
             counter = 0
             choices = ""
