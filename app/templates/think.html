@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="uk-grid-medium" uk-grid>
+    <div class="uk-width-1-2@s">
+        <div uk-grid>
+            <div class="uk-width-1-2@s">
+                <h4>All Users</h4>
+                <ul class="uk-list uk-list-large uk-list-divider">
+                    <li v-for="auser in usersAll">
+                        <span uk-icon="arrow-right" @click="userIn(auser.id)">
+                        </span> #{auser.name}
+                    </li>
+                </ul>
+            </div>
+            <div class="uk-width-1-2@s">
+                <h4>Included Users</h4>
+                <ul class="uk-list uk-list-large uk-list-divider">
+                    <li v-for="iuser in usersInclude">
+                        <span uk-icon="arrow-left" @click="userOut(iuser.id)">
+                        </span> #{iuser.name}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="uk-width-1-2@s">
+        <div uk-grid>
+            <div class="uk-width-1-2@s">
+                <h4>All Info Keys</h4>
+                <ul class="uk-list uk-list-large uk-list-divider">
+                    <li v-for="av, ak in validKeys">
+                        <span uk-icon="arrow-right" @click="keyIn(ak)">
+                        </span> #{ak}
+                    </li>
+                </ul>
+            </div>
+            <div class="uk-width-1-2@s">
+                <h4>Included Info Keys</h4>
+                <ul class="uk-list uk-list-large uk-list-divider">
+                    <li v-for="iv, ik in validKeysInclude">
+                        <span uk-icon="arrow-left" @click="keyOut(ik)">
+                        </span> #{ik} 
+                        <span v-bind:uk-icon="[targetKey == ik ? 'lock' : 'unlock']" @click="toggleLock(ik)"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <h4 class="uk-heading">Goal</h4>
+    <div class="uk-width-1-1">
+        <select class="uk-select uk-width-1-1" v-model="goal">
+            <option value="+">Postive</option>
+            <option value="-">Negative</option>
+            <option value="0">Neutral</option>
+        </select>
+    </div>
+    <h4 class="uk-heading">Mode</h4>
+    <div class="uk-width-1-1">
+        <select class="uk-select uk-width-1-1" v-model="mode">
+            <option value="lin">Linear</option>
+            <option value="exp">Exponential</option>
+            <option value="log">Logarithmic</option>
+        </select>
+    </div>
+    <div class="uk-width-1-1">
+        <button class="uk-button uk-button-primary uk-width-1-1" @click="think" :disabled="usersInclude.length === 0 || Object.keys(validKeysInclude).length === 0">
+            Think Of Decision
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block postprocess %}
+<script>
+    app.usersAll = {{ users|tojson|safe }};
+    app.keysAll = {{ information|tojson|safe }};
+</script>
+{% endblock %}

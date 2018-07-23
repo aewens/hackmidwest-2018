@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Ewe Think</title>
+    <link rel="stylesheet" href="{{
+        url_for('.static', filename='stylesheets/uikit.min.css')
+    }}">
+    <link rel="stylesheet" href="{{
+        url_for('.static', filename='stylesheets/style.css')
+    }}">
+</head>
+<body>
+    
+    <div class="uk-container">
+        <h1 class="uk-heading-line uk-text-center">
+            <span>Ewe Think</span>
+        </h1>
+        <nav class="uk-navbar-container" uk-navbar>
+            <div class="uk-navbar-center">
+                <ul class="uk-navbar-nav">
+                    <li {{ "class=uk-active" if active ==  "home" }}>
+                        <a href="{{ url_for('.home') }}">Home</a>
+                    </li>
+                    <li {{ "class=uk-active" if active ==  "new" }}>
+                        <a href="{{ url_for('.new') }}">New</a>
+                    </li>
+                    <li {{ "class=uk-active" if active=="think" }}>
+                        <a href="{{ url_for('.think') }}">Think</a>
+                    </li>
+                    {#<li {{ "class=uk-active" if active ==  "tweak" }}>
+                        <a href="{{ url_for('.tweak') }}">Tweak</a>
+                    </li>#}
+                    {% if active == "edit" %}
+                    <li {{ "class=uk-active" if active=="edit" }}>
+                        <a href="{{ url_for('.edit', user_id=user_id) }}">
+                            Edit
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+        <hr class="uk-divider-icon">
+        <div id="app">
+            {% block content %}{% endblock %}
+        </div>
+        <hr class="uk-divider-icon">
+        <footer>
+            <p class="uk-text-center">
+                Copyright &copy; 2018 Austin & Garrett Ewens. All rights reserved.
+            </p>
+        </footer>
+    </div>
+
+    <!-- Load scripts here -->
+    <script src="{{ 
+        url_for('.static', filename='scripts/vue.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/axios.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/uikit.min.js') 
+    }}"></script>
+    <script src="{{ 
+        url_for('.static', filename='scripts/uikit-icons.min.js') 
+    }}"></script>
+    <script src="{{ url_for('.static', filename='scripts/app.js') }}"></script>
+    {% block postprocess %}{% endblock %}
+</body>
+</html>
